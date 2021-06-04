@@ -29,8 +29,7 @@ class Node
     id nos ayuda a  guardar el  identificador  del  nodo, ady  nos  ayuda a  guardar un array con  los
     nodos adyacentes al nodo en cuestion, graph_type guarda el tipo de grafica que se esta utilizando.
 =end
-    attr_reader :fig 
-    attr_reader :hitbox1, :hitbox2, :hitbox3, :hitbox4, :hitbox0 
+    attr_reader :fig  
     #las hitbox nos ayudan apoder determinar el area que ocupan los nodos, para asi saber 
     #cuando el usuario se posiciona encima de un nodo
     def initialize(id,ady,gtype)
@@ -51,46 +50,17 @@ class Node
             z: 10
         )
 
-        @hitbox0 = Line.new(
-            x1: self.fig.x, y1: self.fig.y,
-            x2: self.fig.x, y2: self.fig.y-30,
-            color: 'white', z: 10
-        )
-
-        @hitbox1 = Line.new(
-            x1: self.fig.x-30, y1: self.fig.y-30,
-            x2: self.fig.x+30, y2: self.fig.y-30,
-            color: 'black', z: 10
-        )
-
-        @hitbox2 = Line.new(
-            x1: self.fig.x-30, y1: self.fig.y-30,
-            x2: self.fig.x-30, y2: self.fig.y+30,
-            color: 'black', z: 10
-        )
-
-        @hitbox3 = Line.new(
-            x1: self.fig.x+30, y1: self.fig.y-30,
-            x2: self.fig.x+30, y2: self.fig.y+30,
-            color: 'black', z: 10
-        )
-
-        @hitbox4 = Line.new(
-            x1: self.fig.x-30, y1: self.fig.y+30,
-            x2: self.fig.x+30, y2: self.fig.y+30,
-            color: 'black', z: 10
-        )
+        
 
         @id = Text.new(
-            #id.to_s
-            ' ',x: self.fig.x-5 ,
+            id.to_s ,x: self.fig.x-5 ,
             y: self.fig.y-6, color: 'white',
             size: 15, z: 10
         )
     end
 
     def is_in_node(x,y)#determina si el mouse esta en el nodo
-        if x >= self.hitbox2.x1 and x <= self.hitbox4.x1 and y >= self.hitbox1.y1 and y <= self.hitbox3.y1  then
+        if self.fig.contains? x,y then
             true
         else 
             false 
@@ -102,8 +72,22 @@ class Node
         return self.fig.x
     end
 
+
+    def remove
+        self.fig.remove
+        self.id.remove
+    end
+
     def pos_y
         return self.fig.y
+    end
+
+
+    def move(x,y)
+        self.fig.x = x
+        self.fig.y = y
+        self.id.x = self.fig.x-5
+        self.id.y = self.fig.y-6
     end
 end
 
@@ -132,21 +116,56 @@ class Graph
     def initialize(nodes, lines, gtype)
         n = []
         pos = [] 
-        for i in 1..nodes do
-            x =  Node.new(i,[], gtype)
+        for i in 0...nodes do
+            x =  Node.new(i+1,[], gtype)
 
             for c in pos do
                 if c[0] and c[1]  then
                     if (x.pos_x == c[0] and x.pos_y == c[1] ) or ((x.pos_x <= c[0]+30 and x.pos_x >= c[0]-30) or (x.pos_y >= c[1]-30 and x.pos_y <= c[1]+30))
-                        x =  Node.new(i,[], gtype)
+                        x.remove
+                        x =  Node.new(i+1,[], gtype)
                     end
                 end
             end
 
-            n.append x
+            n.append(x)
             pos.append([x.pos_x, x.pos_y])
         end
 
+        @nods = n
+        @graph_typ = gtype
+        @lines = lines
+    end
+
+
+
+    def reset
+        for n in self.nods do
+            n.remove
+        end
+        @nods = []
+    end
+
+
+    def nods=(x)
+        self.reset
+        n = []
+        pos = [] 
+        for i in 0...x do
+            x =  Node.new(i+1,[], self.graph_typ)
+
+            for c in pos do
+                if c[0] and c[1]  then
+                    if (x.pos_x == c[0] and x.pos_y == c[1] ) or ((x.pos_x <= c[0]+30 and x.pos_x >= c[0]-30) or (x.pos_y >= c[1]-30 and x.pos_y <= c[1]+30))
+                        x.remove
+                        x =  Node.new(i+1,[], self.graph_typ)
+                    end
+                end
+            end
+
+            n.append(x)
+            pos.append([x.pos_x, x.pos_y])
+        end
         @nods = n
     end
 
@@ -166,9 +185,11 @@ end
 
 class Tablero
     attr_reader :w1,:w2,:w3,:w4,:w5,:w6,:w7,:w8,:w9,:w10,:w11,:w12        #varibles para las paredes del tablero
-    attr_reader :relleno1,:relleno2,:relleno3, :relleno4 , :relleno5      #variables para colorear las casillas del tablero
-    attr_reader :lock1,:lk1,:lock2,:lk2,:in_txtV  , :in_linestxt          #varibles para controlar los inputs en el tablero 
-    attr_reader :graphT,:textGtype,:textDg, :textNg, :title               #variables para dibujar texto
+    attr_reader :w13,:w14,:w15, :w16
+    attr_reader :relleno1,:relleno2,:relleno3, :relleno4 , :relleno5       #variables para colorear las casillas del tablero
+    attr_reader :lock1,:lk1,:lock2,:lk2,:in_txtV  , :in_linestxt           #varibles para controlar los inputs en el tablero 
+    attr_reader :graphT,:textGtype,:textDg, :textNg, :title , :conexiontxt #variables para dibujar texto
+    attr_reader :nconect1,:nconect2 , :lineconect                          #texto para conexiones entre nodos
     attr_reader :num_nodestxt, :n_nodes, :n_nodestxt,:num_linestxt, :n_lines , :n_linestxt #varibles para texto y para almecenar datos del grafo
 
     def initialize
@@ -248,6 +269,30 @@ class Tablero
 
         )
         #paredes 6-8 para eleccion del tipo de grafica 
+        #paredes 9-12 cuadros para numero de vertices y lineas
+
+        @w13 = Line.new(
+            x1: 1000, y1: 250,
+            x2: 1250, y2: 250, 
+            color: 'black' , z: 10
+        )
+        @w14 =  Line.new(
+            x1: 1000, y1: 290,
+            x2: 1250, y2: 290, 
+            color: 'black' , z: 10
+        )
+
+        @w15 = Line.new(
+            x1: 1095, y1: 250,
+            x2: 1095, y2: 290, 
+            color: 'black' , z: 10
+        )
+
+        @w16 =  Line.new(
+            x1: 1150, y1: 250,
+            x2: 1150, y2: 290, 
+            color: 'black' , z: 10
+        )
 
 
         #Figuras para colorear el interior de el tablero
@@ -372,6 +417,31 @@ class Tablero
         )
 
 
+        @conexiontxt = Text.new(
+            'Conexiones', x: 1095,
+            y: 232, size: 12, color: 'black',
+            z: 10
+        )
+
+        @nconect1 = Text.new(
+            'vertice A', x: 1010,
+            y: 270, size: 15, color: 'black',
+            z: 10
+        )
+
+
+        @nconect2 = Text.new(
+            'vertice B', x: 1160,
+            y: 270, size: 15, color: 'black',
+            z: 10
+        )
+        
+        @lineconect = Text.new(
+            '----', x: 1105, y: 260,
+            size: 15, color: 'black', z: 10
+        )
+
+
         @in_txtV = true
         @in_linestxt = true
 
@@ -380,11 +450,11 @@ class Tablero
     end
 
     def lk1=(x)
-        @lk1
+        @lk1 = x
     end
 
     def lk2=(x)
-        @lk2
+        @lk2 = x
     end
 
 
@@ -398,7 +468,11 @@ class Tablero
     end
 
     def n_nodes=(x)
-        @n_nodes
+        @n_nodes = x
+    end
+
+    def n_lines=(x)
+        @n_lines = x
     end
 end
 
@@ -440,12 +514,27 @@ is_in_NLines = lambda do|x,y|
     end
 end
 
-tab = Tablero.new
-n1 = Node.new(10, [1,2, 8], 'dg')
-n2 = Node.new(8,[10,4],'dg')
 
-#l1 = LinesD.new(n1,n2)
-g = Graph.new(5,0,'ng')
+is_in_vertexA = lambda do |x, y|
+    if x >= 1000 and x <= 1095 and y >= 250 and y <= 290
+        true
+    else
+        false
+    end
+end
+
+is_in_vertexB = lambda do |x, y|
+    if x >= 1150 and x <= 1250 and y >= 250 and y <= 290
+        true
+    else
+        false
+    end
+end
+
+tab = Tablero.new
+g = Graph.new(0,0,'ng')
+current_vertex = -1
+vertex_b = -1
 
 
 on :mouse_move do |event|
@@ -488,6 +577,7 @@ on :mouse_down do |event|
             tab.lk2 = false
             tab.lock1.opacity = 0.8
             tab.lk1 = true
+            tab.lineconect.text = '--->'
         end
 
         if is_in_ng.call event.x, event.y then
@@ -495,6 +585,7 @@ on :mouse_down do |event|
             tab.lk1 = false
             tab.lock2.opacity = 0.8
             tab.lk2 = true
+            tab.lineconect.text = '<-->'
         end
 
 
@@ -512,6 +603,16 @@ on :mouse_down do |event|
             #tab.relleno4.opacity = 0.0
         end
 
+        if g.is_in_graph(event.x, event.y)  != -1 then
+            aux = g.is_in_graph(event.x,event.y)
+            current_vertex = aux 
+            g.nods[aux].move(event.x,event.y)
+        end
+
+
+        if current_vertex != -1 and event.x < 950
+            g.nods[current_vertex].move(event.x, event.y)
+        end
 
         
     when :right
@@ -593,7 +694,11 @@ on :key_down do |event|
     end
 
 
-
+    if event.key == 'n'
+        #s = Window.new( height: 240, width: 300,title: 'prueba') 
+        #show
+    end
+    
 
     if event.key == 'backspace' and tab.in_txtV
         tab.n_nodestxt.text = tab.n_nodestxt.text.chop
@@ -603,6 +708,7 @@ on :key_down do |event|
 
     if event.key == 'return' and tab.in_txtV
         tab.n_nodes = tab.n_nodestxt.text.to_i
+        g.nods = tab.n_nodes
     elsif event.key == 'return' and tab.in_linestxt
         tab.n_lines = tab.n_lines.to_i
     end
